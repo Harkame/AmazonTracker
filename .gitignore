@@ -1,0 +1,11 @@
+torrents/
+__pycache__/
+.tox
+amazonalert.egg-info/
+.coverage
+.pytest_cache
+coverage.xml
+build/
+dist/
+*.pyc
+amazonalert.egg-info
