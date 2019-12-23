@@ -5,17 +5,17 @@ products:
   - code:
       B07T4Q53ZL
     price:
-      50
+      500
 
 email:
   destinations:
     - mail1
 
   subject:
-    mysubject $title $price $url
+    "AmazonTracker : $title"
 
   body:
-    mybody $title $price $url
+    "$title ($price) : $url"
 
 sleeping_time:
   10

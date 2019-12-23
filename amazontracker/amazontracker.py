@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 PORT = 587
 SMTP_SERVER = "smtp.gmail.com"
 
-DEFAULT_SLEEPING_TIME = 5
+DEFAULT_SLEEPING_TIME = 3600
 DEFAULT_PRODUCTS_SLEEPING_TIME = 5
 
 headers = {'User-Agent': 'Mozilla/5.0'}
@@ -150,6 +150,9 @@ class AmazonTracker:
 
         subject = format_string(self.email["subject"], title, price)
         body = format_string(self.email["body"], title, price)
+
+        logger.debug("subject : %s", subject)
+        logger.debug("body : %s", body)
 
         message = f"""\
         {subject}
