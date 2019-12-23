@@ -9,6 +9,7 @@ import os
 import threading
 import re
 import smtplib, ssl
+import time
 
 if __package__ is None or __package__ == "":
     from helpers import get_arguments, get_config
@@ -24,6 +25,9 @@ logger = logging.getLogger(__name__)
 PORT = 587
 SMTP_SERVER = "smtp.gmail.com"
 
+DEFAULT_SLEEPING_TIME = 5
+DEFAULT_PRODUCTS_SLEEPING_TIME = 5
+
 headers = {'User-Agent': 'Mozilla/5.0'}
 
 class AmazonTracker:
@@ -34,12 +38,15 @@ class AmazonTracker:
 
         self.mailed_products = []
 
+        self.sleeping_time = DEFAULT_SLEEPING_TIME
+
     def init(self, arguments):
         self.init_arguments(arguments)
 
         self.init_config()
 
         logger.debug("config_file : %s", self.config_file)
+        logger.debug("sleeping_time : %f", self.sleeping_time)
 
     def init_arguments(self, arguments):
         arguments = get_arguments(arguments)
@@ -67,11 +74,14 @@ class AmazonTracker:
 
             logger.addHandler(stream_handler)
 
-        if arguments.identifiant:
+        if arguments.identifiant  is not None:
             self.identifiant = arguments.identifiant
 
-        if arguments.password:
+        if arguments.password  is not None:
             self.password = arguments.password
+
+        if self.sleeping_time is not None:
+            self.sleeping_time = arguments.sleeping_time
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -86,21 +96,27 @@ class AmazonTracker:
         else:
             self.email = {}
 
+        if "sleeping_time" in config and config["sleeping_time"] is not None:
+            sleeping_time = float(config["sleeping_time"])
+
+            if sleeping_time != DEFAULT_SLEEPING_TIME:
+                self.sleeping_time = sleeping_time
+
     def check_prices(self):
         self.init_config()
 
         for product in self.products:
+            #time.sleep(DEFAULT_PRODUCTS_SLEEPING_TIME)
             if product["code"] not in self.mailed_products:
                 self.check_price(product)
 
     def check_price(self, product):
-        print(product["code"])
+        logger.debug("product['code'] : %s", product['code'])
+
         url = f"{AMAZON_BASE_PRODUCT_URL}{product['code']}"
         print(url)
 
         page = BeautifulSoup(requests.get(url, headers=headers).content, "html.parser")
-
-        print(page)
 
         title_tag = page.find(id="productTitle")
 
@@ -113,32 +129,32 @@ class AmazonTracker:
 
             converted_price = float(price[0:price.rfind(" ") - 1].replace(",", "."))
 
-            print(title)
-            print(price)
-            print(converted_price)
+            logger.debug("title : %s", title)
+            logger.debug("converted_price : %f", converted_price)
 
             if "price" in product:
-                print(f"converted_price : {converted_price}/ product['price'] : {product['price']}")
+                logger.debug("checked price : %f", product["price"])
                 if converted_price <= product["price"]:
+                    logger.debug("price lower (%s) : %f -> %f", product['code'], product["price"], converted_price)
                     self.send_mail(product["code"], title=title, price=price)
-            else: #product is available
+            else:
+                logger.debug("produce %s available", product["co"])
                 self.send_mail(product["code"], title=title)
 
 
     def run(self):
-
-        self.send_mail("frfrefre", "cyberpunk", str(43.5))
-
-        return
-        set_interval(self.check_prices, 10)
+        set_interval(self.check_prices, self.sleeping_time)
 
     def send_mail(self, code=None, title=None, price=None):
         context = ssl.create_default_context()
 
-        message = f"""\
-        {format_string(self.email["subject"], title, price)}
+        subject = format_string(self.email["subject"], title, price)
+        body = format_string(self.email["body"], title, price)
 
-        {format_string(self.email["body"], title, price)}"""
+        message = f"""\
+        {subject}
+
+        {body}"""
 
         with smtplib.SMTP(SMTP_SERVER, PORT) as server:
             server.ehlo()  # Can be omitted

@@ -16,3 +16,6 @@ email:
 
   body:
     mybody $title $price $url
+
+sleeping_time:
+  10

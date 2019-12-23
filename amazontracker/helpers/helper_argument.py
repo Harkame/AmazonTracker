@@ -39,10 +39,21 @@ def get_arguments(arguments):
         type=str,
         required=True,
     )
+
+    argument_parser.add_argument(
+        "-s",
+        "--sleeping_time",
+        help="Sleeping time between requests"
+        "{os.linesep}"
+        "Example : python amazontracker/main.py -s 3500",
+        type=float,
+    )
+
     argument_parser.add_argument(
         "-v",
         "--verbose",
         help="Active verbose mode, support different level"
+        "{os.linesep}"
         "Example : python japscandownloader/main.py -vv",
         action="count",
     )
