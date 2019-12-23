@@ -1,2 +1,18 @@
 products:
-  - B077FZPCRH
+  - code:
+      B07R4NHLD7
+
+  - code:
+      B07T4Q53ZL
+    price:
+      50
+
+email:
+  destinations:
+    - mail1
+
+  subject:
+    mysubject $title $price $url
+
+  body:
+    mybody $title $price $url

@@ -6,6 +6,9 @@ import smtplib
 import time
 import logging
 import os
+import threading
+import re
+import smtplib, ssl
 
 if __package__ is None or __package__ == "":
     from helpers import get_arguments, get_config
@@ -18,65 +21,18 @@ AMAZON_TLD = "fr"
 AMAZON_BASE_PRODUCT_URL = f"https://www.amazon.{AMAZON_TLD}/dp/"
 logger = logging.getLogger(__name__)
 
-# Product link
-URL = "https://www.amazon.de/Samsung-C24F396FHU-Curved-Monitor-schwarz/dp/B01DMDKZTC/ref=sr_1_3?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&keywords=monitor&qid=1565082683&s=gateway&sr=8-3"
+PORT = 587
+SMTP_SERVER = "smtp.gmail.com"
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.87 Safari/537.36"
-}
-
-# Function that will get the information from the URL - in this case we will get:
-# productTitle and priceblock_ourprice (product price)
-def check_price(product):
-    page = requests.get(f"{AMAZON_BASE_PRODUCT_URL}product", headers=headers)
-    soup = BeautifulSoup(page.content, "html.parser")
-
-    title = soup.find(id="productTitle").get_text()
-    price = soup.find(id="priceblock_ourprice").get_text()
-    converted_price = float(price[0:3])
-
-    if converted_price < 100:
-        send_mail()
-
-    print(title.strip())
-    print(converted_price, "€")
-
-    if converted_price <= 100:
-        send_mail()
-
-
-# Function that will send an email if the price is 'true'
-def send_mail(mail_address, password, subject, bod, destinations):
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-
-    server.login("", "")
-
-    subject = "Price fell down!"
-    body = "Check the Amazon link  https://www.amazon.de/Samsung-C24F396FHU-Curved-Monitor-schwarz/dp/B01DMDKZTC/ref=sr_1_3?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&keywords=monitor&qid=1565082683&s=gateway&sr=8-3"
-
-    msg = f"Subject: {subject}\n\n{body}"
-
-    server.sendmail("thomcord@gmail.com", "thomcord@me.com", msg)
-
-    print("Email has been sent")
-
-    server.quit()
-
-
-# It is also possible to add a loop to check the price from time to time
-# while (True):
-#    check_price()
-#    time.sleep(45)
-
+headers = {'User-Agent': 'Mozilla/5.0'}
 
 class AmazonTracker:
     def __init__(self):
         self.products = []
 
         self.config_file = DEFAULT_CONFIG_FILE
+
+        self.mailed_products = []
 
     def init(self, arguments):
         self.init_arguments(arguments)
@@ -120,13 +76,90 @@ class AmazonTracker:
     def init_config(self):
         config = get_config(self.config_file)
 
-        if "products" in config:
-            self.products.extend(config["products"])
+        if "products" in config and config["products"] is not None:
+            self.products = config["products"]
+        else:
+            self.products = []
 
-    def check_price(self):
-        for product in selfs.product:
-            # TODO
-            pass
+        if "email" in config and config["email"] is not None:
+            self.email = config["email"]
+        else:
+            self.email = {}
+
+    def check_prices(self):
+        self.init_config()
+
+        for product in self.products:
+            if product["code"] not in self.mailed_products:
+                self.check_price(product)
+
+    def check_price(self, product):
+        print(product["code"])
+        url = f"{AMAZON_BASE_PRODUCT_URL}{product['code']}"
+        print(url)
+
+        page = BeautifulSoup(requests.get(url, headers=headers).content, "html.parser")
+
+        print(page)
+
+        title_tag = page.find(id="productTitle")
+
+        title = title_tag.text.strip()
+
+        price_tag = page.find(id="priceblock_ourprice")
+
+        if price_tag is not None:
+            price = price_tag.text.strip()
+
+            converted_price = float(price[0:price.rfind(" ") - 1].replace(",", "."))
+
+            print(title)
+            print(price)
+            print(converted_price)
+
+            if "price" in product:
+                print(f"converted_price : {converted_price}/ product['price'] : {product['price']}")
+                if converted_price <= product["price"]:
+                    self.send_mail(product["code"], title=title, price=price)
+            else: #product is available
+                self.send_mail(product["code"], title=title)
+
+
+    def run(self):
+
+        self.send_mail("frfrefre", "cyberpunk", str(43.5))
+
+        return
+        set_interval(self.check_prices, 10)
+
+    def send_mail(self, code=None, title=None, price=None):
+        context = ssl.create_default_context()
+
+        message = f"""\
+        {format_string(self.email["subject"], title, price)}
+
+        {format_string(self.email["body"], title, price)}"""
+
+        with smtplib.SMTP(SMTP_SERVER, PORT) as server:
+            server.ehlo()  # Can be omitted
+            server.starttls(context=context)
+            server.ehlo()  # Can be omitted
+            server.login(self.identifiant, self.password)
+
+            for destination in self.email["destinations"]:
+                server.sendmail(self.identifiant, destination, message)
+
+            if code is not None:
+                self.mailed_products.append(code)
+
+def format_string(base_string="", title="", price="", url=""):
+    return base_string.replace("$title", title).replace("$price", price).replace("$url", url)
+
+
+def set_interval(callback, time):
+    event = threading.Event()
+    while not event.wait(time):
+        callback()
 
 
 class TrackedProduct:
