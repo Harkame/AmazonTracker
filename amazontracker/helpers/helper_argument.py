@@ -21,9 +21,9 @@ def get_arguments(arguments):
     )
 
     argument_parser.add_argument(
-        "-i",
-        "--identifiant",
-        help="Gmail identifiant (e-mail address)"
+        "-e",
+        "--email",
+        help="Gmail address"
         "{os.linesep}"
         "Example : python amazontracker/main.py -l mymailadress@gmail.com",
         type=str,
@@ -42,7 +42,7 @@ def get_arguments(arguments):
 
     argument_parser.add_argument(
         "-s",
-        "--sleeping_time",
+        "--sleep",
         help="Sleeping time between requests"
         "{os.linesep}"
         "Example : python amazontracker/main.py -s 3500",

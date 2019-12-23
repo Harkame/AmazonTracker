@@ -2,14 +2,12 @@
 
 import requests
 from bs4 import BeautifulSoup
-import smtplib
-import time
 import logging
 import os
 import threading
-import re
 import smtplib, ssl
 import time
+import unicodedata
 
 if __package__ is None or __package__ == "":
     from helpers import get_arguments, get_config
@@ -22,13 +20,14 @@ AMAZON_TLD = "fr"
 AMAZON_BASE_PRODUCT_URL = f"https://www.amazon.{AMAZON_TLD}/dp/"
 logger = logging.getLogger(__name__)
 
-PORT = 587
-SMTP_SERVER = "smtp.gmail.com"
+DEFAULT_PORT = 587
+DEFAULT_SMTP_SERVER = "smtp.gmail.com"
 
-DEFAULT_SLEEPING_TIME = 3600
-DEFAULT_PRODUCTS_SLEEPING_TIME = 5
+DEFAULT_SLEEP = 3600
+DEFAULT_PRODUCTS_SLEEP = 20
 
-headers = {'User-Agent': 'Mozilla/5.0'}
+headers = {"User-Agent": "Mozilla/5.0"}
+
 
 class AmazonTracker:
     def __init__(self):
@@ -38,7 +37,10 @@ class AmazonTracker:
 
         self.mailed_products = []
 
-        self.sleeping_time = DEFAULT_SLEEPING_TIME
+        self.sleep = DEFAULT_SLEEP
+
+        self.email_address = ""
+        self.password = ""
 
     def init(self, arguments):
         self.init_arguments(arguments)
@@ -46,7 +48,9 @@ class AmazonTracker:
         self.init_config()
 
         logger.debug("config_file : %s", self.config_file)
-        logger.debug("sleeping_time : %f", self.sleeping_time)
+        logger.debug("sleep : %f", self.sleep)
+        logger.debug("email : %s", self.email_address)
+        logger.debug("password : %s", self.password)
 
     def init_arguments(self, arguments):
         arguments = get_arguments(arguments)
@@ -74,14 +78,14 @@ class AmazonTracker:
 
             logger.addHandler(stream_handler)
 
-        if arguments.identifiant  is not None:
-            self.identifiant = arguments.identifiant
+        if arguments.email is not None:
+            self.email_address = arguments.email
 
-        if arguments.password  is not None:
+        if arguments.password is not None:
             self.password = arguments.password
 
-        if self.sleeping_time is not None:
-            self.sleeping_time = arguments.sleeping_time
+        if self.sleep is not None:
+            self.sleep = arguments.sleep
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -96,25 +100,26 @@ class AmazonTracker:
         else:
             self.email = {}
 
-        if "sleeping_time" in config and config["sleeping_time"] is not None:
-            sleeping_time = float(config["sleeping_time"])
+        if "sleep" in config and config["sleep"] is not None:
+            sleep = float(config["sleep"])
 
-            if sleeping_time != DEFAULT_SLEEPING_TIME:
-                self.sleeping_time = sleeping_time
+            if sleep != DEFAULT_SLEEP:
+                self.sleep = sleep
 
     def check_prices(self):
         self.init_config()
 
         for product in self.products:
-            #time.sleep(DEFAULT_PRODUCTS_SLEEPING_TIME)
+            time.sleep(DEFAULT_PRODUCTS_SLEEP)
             if product["code"] not in self.mailed_products:
                 self.check_price(product)
 
     def check_price(self, product):
-        logger.debug("product['code'] : %s", product['code'])
+        logger.debug("product['code'] : %s", product["code"])
 
         url = f"{AMAZON_BASE_PRODUCT_URL}{product['code']}"
-        print(url)
+
+        logger.debug("url : %s", url)
 
         page = BeautifulSoup(requests.get(url, headers=headers).content, "html.parser")
 
@@ -127,7 +132,7 @@ class AmazonTracker:
         if price_tag is not None:
             price = price_tag.text.strip()
 
-            converted_price = float(price[0:price.rfind(" ") - 1].replace(",", "."))
+            converted_price = float(price[0 : price.rfind(" ") - 1].replace(",", "."))
 
             logger.debug("title : %s", title)
             logger.debug("converted_price : %f", converted_price)
@@ -135,21 +140,27 @@ class AmazonTracker:
             if "price" in product:
                 logger.debug("checked price : %f", product["price"])
                 if converted_price <= product["price"]:
-                    logger.debug("price lower (%s) : %f -> %f", product['code'], product["price"], converted_price)
-                    self.send_mail(product["code"], title=title, price=price)
+                    logger.debug(
+                        "price lower (%s) : %f -> %f",
+                        product["code"],
+                        product["price"],
+                        converted_price,
+                    )
+                    self.send_mail(
+                        product["code"], title=title, price=str(price), url=url
+                    )
             else:
                 logger.debug("produce %s available", product["co"])
-                self.send_mail(product["code"], title=title)
-
+                self.send_mail(product["code"], title=title, url=url)
 
     def run(self):
-        set_interval(self.check_prices, self.sleeping_time)
+        set_interval(self.check_prices, self.sleep)
 
-    def send_mail(self, code=None, title=None, price=None):
-        context = ssl.create_default_context()
-
-        subject = format_string(self.email["subject"], title, price)
-        body = format_string(self.email["body"], title, price)
+    def send_mail(self, code="", title="", price="", url=""):
+        port = 587  # For starttls
+        smtp_server = "smtp.gmail.com"
+        subject = format_string(self.email["subject"], title, price, url)
+        body = format_string(self.email["body"], title, price, url)
 
         logger.debug("subject : %s", subject)
         logger.debug("body : %s", body)
@@ -159,26 +170,44 @@ class AmazonTracker:
 
         {body}"""
 
-        with smtplib.SMTP(SMTP_SERVER, PORT) as server:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(DEFAULT_SMTP_SERVER, DEFAULT_PORT) as server:
             server.ehlo()  # Can be omitted
             server.starttls(context=context)
             server.ehlo()  # Can be omitted
-            server.login(self.identifiant, self.password)
+            server.login(self.email_address, self.password)
 
             for destination in self.email["destinations"]:
-                server.sendmail(self.identifiant, destination, message)
+                server.sendmail(self.email_address, destination, strip_accents(message))
 
-            if code is not None:
-                self.mailed_products.append(code)
+            logger.debug("append %s to mailed_products", code)
+            self.mailed_products.append(code)
+
 
 def format_string(base_string="", title="", price="", url=""):
-    return base_string.replace("$title", title).replace("$price", price).replace("$url", url)
+    return (
+        base_string.replace("$title", title)
+        .replace("$price", price)
+        .replace("$url", url)
+    )
 
 
 def set_interval(callback, time):
     event = threading.Event()
     while not event.wait(time):
         callback()
+
+
+def strip_accents(text):
+
+    try:
+        text = unicode(text, "utf-8")
+    except NameError:  # unicode is a default on python 3
+        pass
+
+    text = unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode("utf-8")
+
+    return str(text)
 
 
 class TrackedProduct:
