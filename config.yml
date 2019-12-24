@@ -1,22 +1,26 @@
 products:
   - code:
-      B07R4NHLD7
-
-  - code:
       B07T4Q53ZL
     price:
       130
 
+  - code:
+      B07R4NHLD7
+
 email:
   destinations:
-    - destination@gmail.com
+    - louisr.daviaud@gmail.com
     - anotherdestination@hotmail.com
 
   subject:
     "AmazonTracker : $title"
 
   body:
-    $title - $price - $url
+    "<H1>$title</H1>
+    <br>
+    $price
+    <br>
+    $url"
 
 sleep:
   3600

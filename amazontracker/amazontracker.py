@@ -8,6 +8,9 @@ import threading
 import smtplib, ssl
 import time
 import unicodedata
+import signal
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 if __package__ is None or __package__ == "":
     from helpers import get_arguments, get_config
@@ -109,10 +112,15 @@ class AmazonTracker:
     def check_prices(self):
         self.init_config()
 
+        print("Check prices...")
+
         for product in self.products:
-            time.sleep(DEFAULT_PRODUCTS_SLEEP)
+            print(f" - {product['code']}")
+
             if product["code"] not in self.mailed_products:
                 self.check_price(product)
+
+            time.sleep(DEFAULT_PRODUCTS_SLEEP)
 
     def check_price(self, product):
         logger.debug("product['code'] : %s", product["code"])
@@ -151,13 +159,14 @@ class AmazonTracker:
                     )
             else:
                 logger.debug("produce %s available", product["co"])
+                print("Product")
                 self.send_mail(product["code"], title=title, url=url)
 
     def run(self):
-        set_interval(self.check_prices, self.sleep)
+        set_interval(self.check_prices, self.sleep, True)
 
     def send_mail(self, code="", title="", price="", url=""):
-        port = 587  # For starttls
+        port = 587
         smtp_server = "smtp.gmail.com"
         subject = format_string(self.email["subject"], title, price, url)
         body = format_string(self.email["body"], title, price, url)
@@ -165,10 +174,10 @@ class AmazonTracker:
         logger.debug("subject : %s", subject)
         logger.debug("body : %s", body)
 
-        message = f"""\
-        {subject}
-
-        {body}"""
+        message = MIMEMultipart()
+        message["From"] = self.email_address
+        message["Subject"] = subject
+        message.attach(MIMEText(body, "html"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP(DEFAULT_SMTP_SERVER, DEFAULT_PORT) as server:
@@ -178,7 +187,10 @@ class AmazonTracker:
             server.login(self.email_address, self.password)
 
             for destination in self.email["destinations"]:
-                server.sendmail(self.email_address, destination, strip_accents(message))
+                message["To"] = destination
+                server.sendmail(
+                    self.email_address, destination, strip_accents(message.as_string())
+                )
 
             logger.debug("append %s to mailed_products", code)
             self.mailed_products.append(code)
@@ -192,8 +204,13 @@ def format_string(base_string="", title="", price="", url=""):
     )
 
 
-def set_interval(callback, time):
+def set_interval(callback, time, once=False):
     event = threading.Event()
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    if once:
+        callback()  # call once
+
     while not event.wait(time):
         callback()
 

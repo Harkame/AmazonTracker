@@ -2,6 +2,8 @@ import argparse
 
 import logging
 
+import os
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,18 +16,16 @@ def get_arguments(arguments):
     argument_parser.add_argument(
         "-c",
         "--config_file",
-        help="Set config file"
-        "{os.linesep}"
-        "Example : python japscandownloader/main.py -c /home/myconfigfile.yml",
+        help="""Set config file
+Example : python japscandownloader/main.py -c /home/myconfigfile.yml""",
         type=str,
     )
 
     argument_parser.add_argument(
         "-e",
         "--email",
-        help="Gmail address"
-        "{os.linesep}"
-        "Example : python amazontracker/main.py -l mymailadress@gmail.com",
+        help="""Gmail address
+Example : python amazontracker/main.py -l mymailadress@gmail.com""",
         type=str,
         required=True,
     )
@@ -33,9 +33,8 @@ def get_arguments(arguments):
     argument_parser.add_argument(
         "-p",
         "--password",
-        help="Gmail password"
-        "{os.linesep}"
-        "Example : python amazontracker/main.py -p mypassword",
+        help="""Gmail password
+Example : python amazontracker/main.py -p mypassword""",
         type=str,
         required=True,
     )
@@ -43,18 +42,16 @@ def get_arguments(arguments):
     argument_parser.add_argument(
         "-s",
         "--sleep",
-        help="Sleeping time between requests"
-        "{os.linesep}"
-        "Example : python amazontracker/main.py -s 3500",
+        help="""Sleeping time between requests
+Example : python amazontracker/main.py -s 3500""",
         type=float,
     )
 
     argument_parser.add_argument(
         "-v",
         "--verbose",
-        help="Active verbose mode, support different level"
-        "{os.linesep}"
-        "Example : python japscandownloader/main.py -vv",
+        help="""Active verbose mode, support different level
+Example : python japscandownloader/main.py -vv""",
         action="count",
     )
 
