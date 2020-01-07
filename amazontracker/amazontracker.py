@@ -12,6 +12,10 @@ import signal
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from firebase_admin import messaging
+import firebase_admin
+from firebase_admin import credentials
+
 if __package__ is None or __package__ == "":
     from helpers import get_arguments, get_config
 else:
@@ -29,6 +33,8 @@ DEFAULT_SMTP_SERVER = "smtp.gmail.com"
 DEFAULT_SLEEP = 3600
 DEFAULT_PRODUCTS_SLEEP = 20
 
+DEFAULT_CREDENTIAL = "credential.json"
+
 headers = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -45,6 +51,9 @@ class AmazonTracker:
         self.email_address = ""
         self.password = ""
 
+        self.enable_notification = False
+        self.credential = DEFAULT_CREDENTIAL
+
     def init(self, arguments):
         self.init_arguments(arguments)
 
@@ -54,6 +63,8 @@ class AmazonTracker:
         logger.debug("sleep : %f", self.sleep)
         logger.debug("email : %s", self.email_address)
         logger.debug("password : %s", self.password)
+        logger.debug("enable_notification : %s", self.enable_notification)
+        logger.debug("credential : %s", self.credential)
 
     def init_arguments(self, arguments):
         arguments = get_arguments(arguments)
@@ -89,6 +100,10 @@ class AmazonTracker:
 
         if self.sleep is not None:
             self.sleep = arguments.sleep
+
+        if "notification" in arguments:
+            self.enable_notification = True
+            self.credential = arguments.notification
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -135,9 +150,17 @@ class AmazonTracker:
 
         title = title_tag.text.strip()
 
-        price_tag = page.find(id="priceblock_ourprice")
+        if "selector" in product:
+            count = (
+                product["selector"]["count"] if "count" in product["selector"] else 0
+            )
+            price_tag = page.select(product["selector"]["value"])[count]
+        else:
+            price_tag = page.find(id="priceblock_ourprice")
 
         if price_tag is not None:
+            print(price_tag)
+
             price = price_tag.text.strip()
 
             converted_price = float(price[0 : price.rfind(" ") - 1].replace(",", "."))
@@ -157,10 +180,16 @@ class AmazonTracker:
                     self.send_mail(
                         product["code"], title=title, price=str(price), url=url
                     )
+
+                    if self.enable_notification:
+                        self.send_notification("amazon_tracker", title, str(price))
             else:
                 logger.debug("produce %s available", product["co"])
                 print("Product")
                 self.send_mail(product["code"], title=title, url=url)
+
+                if self.enable_notification:
+                    self.send_notification("amazon_tracker", title, body)
 
     def run(self):
         set_interval(self.check_prices, self.sleep, True)
@@ -194,6 +223,41 @@ class AmazonTracker:
 
             logger.debug("append %s to mailed_products", code)
             self.mailed_products.append(code)
+
+    def send_notification(self, topic="", title="", body=""):
+        logger.debug("send_notification")
+
+        cred = credentials.Certificate("credential.json")
+        firebase_admin.initialize_app(cred)
+
+        topic = "amazon_tracker"
+
+        # See documentation on defining a message payload.
+        message = messaging.Message(
+            data={"score": "850", "time": "2:45",}, topic=topic,
+        )
+
+        # Send a message to the devices subscribed to the provided topic.
+        response = messaging.send(message)
+        # Response is a message ID string.
+        print(response)
+
+    def send_single(self):
+        cred = credentials.Certificate("credential.json")
+        firebase_admin.initialize_app(cred)
+
+        registration_token = "exW-CX5H0us:APA91bFSAjAvvmF5RSLuO9qLXrFRrpBoDEjNG02zZpe__Rdu-gH1RvFQvR0lD2iz13bZpASKyuTHwxKDLlFNC63kopKxP_LiUr5BnJhWqV9U8a81oNiPsptCV1v_Rru3SmqCk-Ju2adw"
+
+        # See documentation on defining a message payload.
+        message = messaging.Message(
+            data={"score": "850", "time": "2:45",}, token=registration_token,
+        )
+
+        # Send a message to the device corresponding to the provided
+        # registration token.
+        response = messaging.send(message)
+        # Response is a message ID string.
+        print("Successfully sent message:", response)
 
 
 def format_string(base_string="", title="", price="", url=""):

@@ -27,7 +27,6 @@ Example : python japscandownloader/main.py -c /home/myconfigfile.yml""",
         help="""Gmail address
 Example : python amazontracker/main.py -l mymailadress@gmail.com""",
         type=str,
-        required=True,
     )
 
     argument_parser.add_argument(
@@ -36,7 +35,14 @@ Example : python amazontracker/main.py -l mymailadress@gmail.com""",
         help="""Gmail password
 Example : python amazontracker/main.py -p mypassword""",
         type=str,
-        required=True,
+    )
+
+    argument_parser.add_argument(
+        "-n",
+        "--notification",
+        help="""Firebase Service Account Key
+Example : python amazontracker/main.py -n /path/to/myserviceaccountkey.json""",
+        type=str,
     )
 
     argument_parser.add_argument(

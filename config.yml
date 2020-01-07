@@ -1,11 +1,21 @@
 products:
   - code:
-      B07T4Q53ZL
+      B01N223WHL
     price:
-      130
+      45
 
   - code:
       B07R4NHLD7
+
+  - code:
+      B07T3NQBXV
+    price:
+      130
+    selector:
+        value:
+          .swatchElement span span span span span
+        count:
+          1
 
 email:
   destinations:
@@ -22,5 +32,15 @@ email:
     <br>
     $url"
 
+notification:
+  topic:
+    amazon_tracker
+
+  title:
+    "AmazonTracker"
+
+  body:
+    "$title"
+
 sleep:
-  3600
+  10
