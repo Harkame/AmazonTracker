@@ -10,7 +10,7 @@ products:
   - code:
       B07T3NQBXV
     price:
-      130
+      140
     selector:
         value:
           .swatchElement span span span span span
