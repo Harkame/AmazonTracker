@@ -1,21 +1,9 @@
 products:
   - code:
-      B01N223WHL
+      B01LS0TF6U
     price:
-      45
+      9
 
-  - code:
-      B07R4NHLD7
-
-  - code:
-      B07T3NQBXV
-    price:
-      140
-    selector:
-        value:
-          .swatchElement span span span span span
-        count:
-          1
 
 email:
   destinations:

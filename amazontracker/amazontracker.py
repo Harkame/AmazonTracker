@@ -52,6 +52,7 @@ class AmazonTracker:
         self.password = ""
 
         self.enable_notification = False
+        self.enable_email = False
         self.credential = DEFAULT_CREDENTIAL
 
     def init(self, arguments):
@@ -92,11 +93,11 @@ class AmazonTracker:
 
             logger.addHandler(stream_handler)
 
-        if arguments.email is not None:
+        if arguments.email is not None and arguments.password is not None:
             self.email_address = arguments.email
-
-        if arguments.password is not None:
             self.password = arguments.password
+            self.enable_email = True
+            print("inside")
 
         if self.sleep is not None:
             self.sleep = arguments.sleep
@@ -104,6 +105,8 @@ class AmazonTracker:
         if "notification" in arguments:
             self.enable_notification = True
             self.credential = arguments.notification
+            cred = credentials.Certificate(self.credential)
+            firebase_admin.initialize_app(cred)
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -159,8 +162,6 @@ class AmazonTracker:
             price_tag = page.find(id="priceblock_ourprice")
 
         if price_tag is not None:
-            print(price_tag)
-
             price = price_tag.text.strip()
 
             converted_price = float(price[0 : price.rfind(" ") - 1].replace(",", "."))
@@ -177,24 +178,27 @@ class AmazonTracker:
                         product["price"],
                         converted_price,
                     )
-                    self.send_mail(
-                        product["code"], title=title, price=str(price), url=url
-                    )
+
+                    if self.enable_email:
+                        self.send_email(
+                            product["code"], title=title, price=str(price), url=url
+                        )
 
                     if self.enable_notification:
-                        self.send_notification("amazon_tracker", title, str(price))
+                        self.send_notification("amazon_tracker", title, str(price), url)
             else:
                 logger.debug("produce %s available", product["co"])
-                print("Product")
-                self.send_mail(product["code"], title=title, url=url)
+
+                if self.enable_email:
+                    self.send_email(product["code"], title=title, url=url)
 
                 if self.enable_notification:
-                    self.send_notification("amazon_tracker", title, body)
+                    self.send_notification("amazon_tracker", title, body, url)
 
     def run(self):
         set_interval(self.check_prices, self.sleep, True)
 
-    def send_mail(self, code="", title="", price="", url=""):
+    def send_email(self, code="", title="", price="", url=""):
         port = 587
         smtp_server = "smtp.gmail.com"
         subject = format_string(self.email["subject"], title, price, url)
@@ -224,23 +228,19 @@ class AmazonTracker:
             logger.debug("append %s to mailed_products", code)
             self.mailed_products.append(code)
 
-    def send_notification(self, topic="", title="", body=""):
+    def send_notification(self, topic="", title="", body="", url=""):
         logger.debug("send_notification")
-
-        cred = credentials.Certificate("credential.json")
-        firebase_admin.initialize_app(cred)
 
         topic = "amazon_tracker"
 
         # See documentation on defining a message payload.
         message = messaging.Message(
-            data={"score": "850", "time": "2:45",}, topic=topic,
+            notification=messaging.Notification(title=title, body=body,),
+            data={"url": url},
+            topic=topic,
         )
 
-        # Send a message to the devices subscribed to the provided topic.
         response = messaging.send(message)
-        # Response is a message ID string.
-        print(response)
 
     def send_single(self):
         cred = credentials.Certificate("credential.json")
