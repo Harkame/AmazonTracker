@@ -97,12 +97,11 @@ class AmazonTracker:
             self.email_address = arguments.email
             self.password = arguments.password
             self.enable_email = True
-            print("inside")
 
-        if self.sleep is not None:
+        if arguments.sleep is not None:
             self.sleep = arguments.sleep
 
-        if "notification" in arguments:
+        if arguments.notification is not None:
             self.enable_notification = True
             self.credential = arguments.notification
             cred = credentials.Certificate(self.credential)
