@@ -44,7 +44,7 @@ class AmazonTracker:
 
         self.config_file = DEFAULT_CONFIG_FILE
 
-        self.mailed_products = []
+        self.checked_products = []
 
         self.sleep = DEFAULT_SLEEP
 
@@ -134,7 +134,7 @@ class AmazonTracker:
         for product in self.products:
             print(f" - {product['code']}")
 
-            if product["code"] not in self.mailed_products:
+            if product["code"] not in self.checked_products:
                 self.check_price(product)
 
             time.sleep(DEFAULT_PRODUCTS_SLEEP)
@@ -185,6 +185,14 @@ class AmazonTracker:
 
                     if self.enable_notification:
                         self.send_notification("amazon_tracker", title, str(price), url)
+
+                    self.checked_products.append(product["code"])
+            elif "reduction" in product:
+                if (
+                    page.find("span", {"class": "priceBlockStrikePriceString"})
+                    is not None
+                ):
+                    print("price reductionin page")
             else:
                 logger.debug("produce %s available", product["co"])
 
@@ -193,6 +201,8 @@ class AmazonTracker:
 
                 if self.enable_notification:
                     self.send_notification("amazon_tracker", title, body, url)
+
+                self.checked_products.append(product["code"])
 
     def run(self):
         set_interval(self.check_prices, self.sleep, True)
@@ -218,15 +228,6 @@ class AmazonTracker:
             server.ehlo()  # Can be omitted
             server.login(self.email_address, self.password)
 
-            for destination in self.email["destinations"]:
-                message["To"] = destination
-                server.sendmail(
-                    self.email_address, destination, strip_accents(message.as_string())
-                )
-
-            logger.debug("append %s to mailed_products", code)
-            self.mailed_products.append(code)
-
     def send_notification(self, topic="", title="", body="", url=""):
         logger.debug("send_notification")
 
@@ -234,9 +235,7 @@ class AmazonTracker:
 
         # See documentation on defining a message payload.
         message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body,),
-            data={"url": url},
-            topic=topic,
+            data={"title": title, "body": body, "url": url}, topic=topic,
         )
 
         response = messaging.send(message)
