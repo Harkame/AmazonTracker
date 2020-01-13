@@ -1,8 +1,26 @@
 products:
-  - code:
-      B07YGH4PGT
+  - code: #check price
+      B07T4Q53ZL
+    price:
+      151
+
+  - code: #check if reduction
+      B07T4Q53ZL
     reduction:
       true
+
+  - code: #check price with specific selector
+      B07T3NQBXV
+    price:
+      140
+    selector:
+        value:
+          .swatchElement span span span span span
+        count:
+          1
+
+  - code: #check available
+      B07T3NQBXV
 
 
 email:
@@ -24,11 +42,15 @@ notification:
   topic:
     amazon_tracker
 
+  registration_token:
+    - device1
+    - device2
+
   title:
     "AmazonTracker"
 
   body:
-    "$title"
+    "$price"
 
 sleep:
   10

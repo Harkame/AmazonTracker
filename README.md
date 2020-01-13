@@ -38,34 +38,11 @@ python amazontracker/main.py -e mymailaddress@gmail.com -p mypassword
 ```
 
 
-
-### Search torrents
-
-Return url's results torrent for specified search
-
-``` python
-
-torrents_url = scraper.search({name : "walking dead s08"})
-
-"""
-
-https://www2.yggtorrent.ch/torrent/filmvid▒o/s▒rie-tv/227730-the+walking+dead+s08+complete+vostfr+proper+720p+hdtv+x264-expm5
-https://www2.yggtorrent.ch/torrent/filmvid▒o/s▒rie-tv/227752-the+walking+dead+s08+complete+vostfr+proper+hdtv+xvid-expm5
-https://www2.yggtorrent.ch/torrent/filmvid▒o/s▒rie-tv/227763-the+walking+dead+s08+vostfr+web-dl+x264-ark01
-https://www2.yggtorrent.ch/torrent/filmvid▒o/s▒rie-tv/227764-the+walking+dead+s08+vostfr+720p+amzn+web-dl+dd5+1+h264-ark01
-https://www2.yggtorrent.ch/torrent/filmvid▒o/s▒rie-tv/227765-the+walking+dead+s08+vostfr+1080p+amzn+web-dl+ddp5+1+h264-ark01
-
-...
-
-"""
-
-```
-
 ### How it work
 
 This program use an config file (default : ./config.yml)
 
-This file contains list of mangas to download, destination path, etc.
+This file contains list of products to track, email config, notification config, etc.
 
 #### Example of config file
 

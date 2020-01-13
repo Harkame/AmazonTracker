@@ -4,22 +4,33 @@ import requests
 from bs4 import BeautifulSoup
 import logging
 import os
-import threading
-import smtplib, ssl
-import time
 import unicodedata
-import signal
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
 from firebase_admin import messaging
 import firebase_admin
 from firebase_admin import credentials
+import smtplib, ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import time
 
 if __package__ is None or __package__ == "":
-    from helpers import get_arguments, get_config
+    from helpers import (
+        get_arguments,
+        get_config,
+        set_interval,
+        strip_accents,
+        format_string,
+    )
+    from models import Product
 else:
-    from .helpers import get_arguments, get_config
+    from .helpers import (
+        get_arguments,
+        get_config,
+        set_interval,
+        strip_accents,
+        format_string,
+    )
+    from .models import product
 
 DEFAULT_CONFIG_FILE = os.path.join(".", "config.yml")
 AMAZON_TLD = "fr"
@@ -41,23 +52,17 @@ headers = {"User-Agent": "Mozilla/5.0"}
 class AmazonTracker:
     def __init__(self):
         self.products = []
-
         self.config_file = DEFAULT_CONFIG_FILE
-
         self.checked_products = []
-
         self.sleep = DEFAULT_SLEEP
-
         self.email_address = ""
         self.password = ""
-
         self.enable_notification = False
         self.enable_email = False
         self.credential = DEFAULT_CREDENTIAL
 
-    def init(self, arguments):
-        self.init_arguments(arguments)
-
+    def init(self):
+        self.init_arguments()
         self.init_config()
 
         logger.debug("config_file : %s", self.config_file)
@@ -67,8 +72,8 @@ class AmazonTracker:
         logger.debug("enable_notification : %s", self.enable_notification)
         logger.debug("credential : %s", self.credential)
 
-    def init_arguments(self, arguments):
-        arguments = get_arguments(arguments)
+    def init_arguments(self):
+        arguments = get_arguments(None)
 
         if arguments.verbose:
             logger.setLevel(logging.DEBUG)
@@ -132,9 +137,8 @@ class AmazonTracker:
         print("Check prices...")
 
         for product in self.products:
-            print(f" - {product['code']}")
-
             if product["code"] not in self.checked_products:
+                print(f" - {product['code']}")
                 self.check_price(product)
 
             time.sleep(DEFAULT_PRODUCTS_SLEEP)
@@ -148,9 +152,11 @@ class AmazonTracker:
 
         page = BeautifulSoup(requests.get(url, headers=headers).content, "html.parser")
 
-        title_tag = page.find(id="productTitle")
+        tracked_product = Product()
+        tracked_product.code = product["code"]
+        tracked_product.url = url
 
-        title = title_tag.text.strip()
+        tracked_product.title = page.find(id="productTitle").text.strip()
 
         if "selector" in product:
             count = (
@@ -163,28 +169,46 @@ class AmazonTracker:
         if price_tag is not None:
             price = price_tag.text.strip()
 
-            converted_price = float(price[0 : price.rfind(" ") - 1].replace(",", "."))
+            tracked_product.price = float(
+                price[0 : price.rfind(" ") - 1].replace(",", ".")
+            )
 
-            logger.debug("title : %s", title)
-            logger.debug("converted_price : %f", converted_price)
+            logger.debug("product.title : %s", tracked_product.title)
+            logger.debug("product.price : %f", tracked_product.price)
 
             if "price" in product:
                 logger.debug("checked price : %f", product["price"])
-                if converted_price <= product["price"]:
+                if tracked_product.price <= product["price"]:
                     logger.debug(
                         "price lower (%s) : %f -> %f",
                         product["code"],
                         product["price"],
-                        converted_price,
+                        tracked_product.price,
                     )
 
                     if self.enable_email:
-                        self.send_email(
-                            product["code"], title=title, price=str(price), url=url
+                        subject = format_string(
+                            self.email["subject"],
+                            tracked_product.title,
+                            str(tracked_product.price),
+                            url,
+                        )
+                        body = format_string(
+                            self.email["body"],
+                            tracked_product.title,
+                            str(tracked_product.price),
+                            url,
                         )
 
+                        self.send_email(subject=subject, body=body)
+
                     if self.enable_notification:
-                        self.send_notification("amazon_tracker", title, str(price), url)
+                        self.send_notification_topic(
+                            "amazon_tracker",
+                            tracked_product.title,
+                            str(tracked_product.price),
+                            url,
+                        )
 
                     self.checked_products.append(product["code"])
             elif "reduction" in product:
@@ -197,103 +221,53 @@ class AmazonTracker:
                 logger.debug("produce %s available", product["co"])
 
                 if self.enable_email:
-                    self.send_email(product["code"], title=title, url=url)
+                    self.send_email(
+                        product["code"], title=tracked_product.title, url=url
+                    )
 
                 if self.enable_notification:
-                    self.send_notification("amazon_tracker", title, body, url)
+                    self.send_notification_topic(
+                        "amazon_tracker", tracked_product.title, body, url
+                    )
 
                 self.checked_products.append(product["code"])
 
-    def run(self):
-        set_interval(self.check_prices, self.sleep, True)
-
-    def send_email(self, code="", title="", price="", url=""):
-        port = 587
+    def send_email(self, subject, body):
         smtp_server = "smtp.gmail.com"
-        subject = format_string(self.email["subject"], title, price, url)
-        body = format_string(self.email["body"], title, price, url)
 
         logger.debug("subject : %s", subject)
         logger.debug("body : %s", body)
 
         message = MIMEMultipart()
+        message["To"] = self.email["destinations"]
         message["From"] = self.email_address
         message["Subject"] = subject
         message.attach(MIMEText(body, "html"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP(DEFAULT_SMTP_SERVER, DEFAULT_PORT) as server:
-            server.ehlo()  # Can be omitted
+            server.ehlo()
             server.starttls(context=context)
-            server.ehlo()  # Can be omitted
+            server.ehlo()
             server.login(self.email_address, self.password)
 
-    def send_notification(self, topic="", title="", body="", url=""):
+    def send_notification_topic(self, topic="", title="", body="", url=""):
         logger.debug("send_notification")
 
         topic = "amazon_tracker"
 
-        # See documentation on defining a message payload.
         message = messaging.Message(
             data={"title": title, "body": body, "url": url}, topic=topic,
         )
 
         response = messaging.send(message)
 
-    def send_single(self):
-        cred = credentials.Certificate("credential.json")
-        firebase_admin.initialize_app(cred)
-
-        registration_token = "exW-CX5H0us:APA91bFSAjAvvmF5RSLuO9qLXrFRrpBoDEjNG02zZpe__Rdu-gH1RvFQvR0lD2iz13bZpASKyuTHwxKDLlFNC63kopKxP_LiUr5BnJhWqV9U8a81oNiPsptCV1v_Rru3SmqCk-Ju2adw"
-
-        # See documentation on defining a message payload.
+    def send_notification_device(self, registration_token=""):
         message = messaging.Message(
-            data={"score": "850", "time": "2:45",}, token=registration_token,
+            data={"title": title, "body": body, "url": url}, token=registration_token,
         )
 
-        # Send a message to the device corresponding to the provided
-        # registration token.
         response = messaging.send(message)
-        # Response is a message ID string.
-        print("Successfully sent message:", response)
 
-
-def format_string(base_string="", title="", price="", url=""):
-    return (
-        base_string.replace("$title", title)
-        .replace("$price", price)
-        .replace("$url", url)
-    )
-
-
-def set_interval(callback, time, once=False):
-    event = threading.Event()
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    if once:
-        callback()  # call once
-
-    while not event.wait(time):
-        callback()
-
-
-def strip_accents(text):
-
-    try:
-        text = unicode(text, "utf-8")
-    except NameError:  # unicode is a default on python 3
-        pass
-
-    text = unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode("utf-8")
-
-    return str(text)
-
-
-class TrackedProduct:
-    def __init__(self):
-        self.code = ""
-        self.name = ""
-        self.price = 0.0
-
-    def __str__(self):
-        pass
+    def run(self):
+        set_interval(self.check_prices, self.sleep, True)
