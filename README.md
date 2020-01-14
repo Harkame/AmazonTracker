@@ -1,5 +1,7 @@
 # AmazonTracker
 
+## In dev
+
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fb0ce7eed7e04839b8023b520f6d6c13)](https://www.codacy.com/manual/Harkame/AmazonTracker?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Harkame/AmazonTracker&amp;utm_campaign=Badge_Grade)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c8c73facbfdde6a7d943/maintainability)](https://codeclimate.com/github/Harkame/AmazonTracker/maintainability)
 [![Build Status](https://travis-ci.org/Harkame/AmazonTracker.svg?branch=master)](https://travis-ci.org/Harkame/AmazonTracker)
