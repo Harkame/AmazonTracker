@@ -155,7 +155,7 @@ products:
 
 Alert if the product « B07T3NQBXV » price is below 140
 
-![Screenshot](https://raw.githubusercontent.com/Harkame/ScamNumberScraper/dev/scamnumberscraper.png "Amazon multiple product")
+![Screenshot](https://github.com/Harkame/AmazonTracker/blob/master/amazon_selector.JPG "Amazon multiple product")
 
 selector :
 
