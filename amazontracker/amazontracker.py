@@ -210,6 +210,10 @@ class AmazonTracker:
                             url,
                         )
 
+                        if registration_token in self.email:
+                            for token in email["registration_token"]:
+                                self.send_notification_device(token, tracked_product.title, str(tracked_product.price), url)
+
                     self.checked_products.append(product["code"])
             elif "reduction" in product:
                 if (
@@ -227,7 +231,7 @@ class AmazonTracker:
 
                 if self.enable_notification:
                     self.send_notification_topic(
-                        "amazon_tracker", tracked_product.title, body, url
+                        "amazon_tracker", tracked_product.title, "Is available", url
                     )
 
                 self.checked_products.append(product["code"])
@@ -262,7 +266,7 @@ class AmazonTracker:
 
         response = messaging.send(message)
 
-    def send_notification_device(self, registration_token=""):
+    def send_notification_device(self, registration_token="", title="", body="", url=""):
         message = messaging.Message(
             data={"title": title, "body": body, "url": url}, token=registration_token,
         )
