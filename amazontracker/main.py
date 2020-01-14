@@ -7,5 +7,3 @@ if __name__ == "__main__":
     amazon_tracker.init()
 
     amazon_tracker.run()
-
-    # amazon_tracker.send_notification()
