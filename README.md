@@ -1,9 +1,7 @@
 # AmazonTracker
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fb0ce7eed7e04839b8023b520f6d6c13)](https://www.codacy.com/manual/Harkame/AmazonTracker?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Harkame/AmazonTracker&amp;utm_campaign=Badge_Grade)
-
 [![Maintainability](https://api.codeclimate.com/v1/badges/c8c73facbfdde6a7d943/maintainability)](https://codeclimate.com/github/Harkame/AmazonTracker/maintainability)
-
 [![Build Status](https://travis-ci.org/Harkame/AmazonTracker.svg?branch=master)](https://travis-ci.org/Harkame/AmazonTracker)
 
 ## Installation
@@ -18,7 +16,6 @@ cd AmazonTracker
 
 pip install -r requirements.txt
 
-
 ```
 
 ### Dependencies
@@ -26,6 +23,7 @@ pip install -r requirements.txt
 -   [BeautifulSoup 4](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
 -   [lxml](https://github.com/lxml/lxml.git)
 -   [requests](https://github.com/psf/requests.git)
+-   [firebase-admin-python](https://github.com/firebase/firebase-admin-python)
 
 ## Usage
 
@@ -37,40 +35,70 @@ python amazontracker/main.py -e mymailaddress@gmail.com -p mypassword
 
 ```
 
-
-### How it work
+### How it works
 
 This program use an config file (default : ./config.yml)
 
-This file contains list of products to track, email config, notification config, etc.
+This file contains list of products to track, alert settings, etc.
 
 #### Example of config file
 
 ``` yaml
-products:
-  - code:
-      B07R4NHLD7
 
-  - code:
+products:
+  - code: #check price
       B07T4Q53ZL
     price:
-      130
+      151
+
+  - code: #check if discouned
+      B07T4Q53ZL
+    discounted:
+      true
+
+  - code: #check price with specific selector
+      B07T3NQBXV
+    price:
+      140
+    selector:
+        value:
+          .swatchElement span span span span span
+        count:
+          1
+
+  - code: #check available
+      B07T3NQBXV
 
 email:
   destinations:
-    - destination@gmail.com
-    - anotherdestination@hotmail.com
+    - louisr.daviaud@gmail.com
 
   subject:
     "AmazonTracker : $title"
 
   body:
-    $title - $price - $url
+    "<html>
+    <a href='$url'><H3>$title</H3></a>
+    <H3>$price</H3>
+    </html>"
+
+notification:
+  topic:
+    amazon_tracker
+
+  registration_token:
+    - device1
+    - device2
+
+  title:
+    "AmazonTracker"
+
+  body:
+    "$price"
 
 sleep:
   10
 ```
-
 
 ### Track an product
 
@@ -80,24 +108,160 @@ You can find the code in product page url
 
 https://www.amazon.fr/Red-Dead-Redemption-2-PC/dp/B07ZWB2Q24/ref=sr_1_1?__mk_fr_FR=ÅMÅŽÕÑ&keywords=red+dead+redemption&qid=1577105770&sr=8-1
 
-you can also add an attribut price, you will notified when the product was available under this price
+There is 4 type of tracking :
+
+#### By price
+
+``` yaml
+
+products:
+  - code: #check price
+      B07T4Q53ZL
+    price:
+      151
+
+```
+
+Alert if the product « B07T4Q53ZL » price is below 151
+
+#### Is available
+
+``` yaml
+
+products:
+  - code: #check available
+      B07T3NQBXV
+
+```
+
+Alert if the product « B07T3NQBXV » is available
+
+#### Custom selector
+
+``` yaml
+
+products:
+  - code: #check price with specific selector
+      B07T3NQBXV
+    price:
+      140
+    selector:
+        value:
+          .swatchElement span span span span span
+        count:
+          1
+
+```
+
+Alert if the product « B07T3NQBXV » price is below 140
+
+![Screenshot](https://raw.githubusercontent.com/Harkame/ScamNumberScraper/dev/scamnumberscraper.png "Amazon multiple product")
+
+selector :
+
+In this case « .swatchElement span span span span span » select price from Blu-ray and DVD
+count represent the element to select, in this case 1 = Blu-ray and 2 = DVD
+
+#### Is discounted
+
+``` yaml
+products:
+  - code: #check if discounted
+      B07T4Q53ZL
+    discounted:
+      true
+
+```
+
+####
+
+### Alert
+
+There is 2 type of alert
+
+#### EMail
+
+To enable e-mail notification you need to run amazontracker with parameter email and password
+
+```
+
+python amazontracker/main.py -e myemailaddress@gmail.com -p mypassword
+
+```
+
+You specify an gmail account, you must enable access https://support.google.com/a/answer/6260879
 
 
-## TODO
+``` yaml
 
--   More tests, find non bugged search (especially for sort tests)
+email:
+  destinations:
+    - myemailaddress@gmail.com
+    - myanotheremail@hotmail.com
 
-## Test
+  subject:
+    "AmazonTracker : $title"
 
-Declare environment variables (requiered for login, download tests)
+  body:
+    "<html>
+    <a href='$url'><H3>$title</H3></a>
+    <H3>$price</H3>
+    </html>"
 
--   YGGTORRENT_IDENTIFIANT
--   YGGTORRENT_PASSWORD
+```
+
+
+
+#### Push notification
+
+You must create an application linked with your own firebase account
+
+[There is an example app](https://github.com/Harkame/AmazonTrackerApp)
+
+[FCM Tuto](https://www.youtube.com/watch?v=QXPgMUSfYFI)
+
+``` yaml
+
+notification:
+  topic:
+    amazon_tracker
+
+  registration_token:
+    - device1
+    - device2
+
+  title:
+    "AmazonTracker"
+
+  body:
+    "$price"
+
+```
 
 ``` bash
 
-pip install tox
+python amazontracker/main.py -n credential.json
 
-tox
+topic :
+
+Topic to send message
+
+registration_token :
+
+List of token generated by your app
+
+title, subject :
+
+Those can be customised, keyword $title, $price and $url gonna be replaced by product's title, product's price and product's url
 
 ```
+
+https://github.com/Harkame/AmazonTrackerApp
+
+topic :
+
+registration_token :
+
+title :
+
+body :

@@ -1,41 +1,24 @@
 products:
   - code: #check price
-      B07T4Q53ZL
+      B07XJZS6L2
     price:
-      151
-
-  - code: #check if reduction
-      B07T4Q53ZL
-    reduction:
-      true
-
-  - code: #check price with specific selector
-      B07T3NQBXV
-    price:
-      140
-    selector:
-        value:
-          .swatchElement span span span span span
-        count:
-          1
+      55
 
   - code: #check available
       B07T3NQBXV
 
 email:
   destinations:
-    - louisr.daviaud@gmail.com
-    - anotherdestination@hotmail.com
+    - mymail@gmail.com
 
   subject:
     "AmazonTracker : $title"
 
   body:
-    "<H1>$title</H1>
-    <br>
-    $price
-    <br>
-    $url"
+    "<html>
+    <a href='$url'><H3>$title</H3></a>
+    <H3>$price</H3>
+    </html>"
 
 notification:
   topic:

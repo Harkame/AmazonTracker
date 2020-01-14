@@ -1,5 +1,3 @@
-# This program will check the price of a product on Amazon.de and send and email if a conditional is true.
-
 import requests
 from bs4 import BeautifulSoup
 import logging
@@ -210,9 +208,14 @@ class AmazonTracker:
                             url,
                         )
 
-                        if registration_token in self.email:
+                        if "registration_token" in self.email:
                             for token in email["registration_token"]:
-                                self.send_notification_device(token, tracked_product.title, str(tracked_product.price), url)
+                                self.send_notification_device(
+                                    token,
+                                    tracked_product.title,
+                                    str(tracked_product.price),
+                                    url,
+                                )
 
                     self.checked_products.append(product["code"])
             elif "reduction" in product:
@@ -243,7 +246,6 @@ class AmazonTracker:
         logger.debug("body : %s", body)
 
         message = MIMEMultipart()
-        message["To"] = self.email["destinations"]
         message["From"] = self.email_address
         message["Subject"] = subject
         message.attach(MIMEText(body, "html"))
@@ -254,6 +256,10 @@ class AmazonTracker:
             server.starttls(context=context)
             server.ehlo()
             server.login(self.email_address, self.password)
+            server.sendmail(
+                "AmazonTracker", self.email["destinations"], message.as_string()
+            )
+            server.close()
 
     def send_notification_topic(self, topic="", title="", body="", url=""):
         logger.debug("send_notification")
@@ -266,7 +272,9 @@ class AmazonTracker:
 
         response = messaging.send(message)
 
-    def send_notification_device(self, registration_token="", title="", body="", url=""):
+    def send_notification_device(
+        self, registration_token="", title="", body="", url=""
+    ):
         message = messaging.Message(
             data={"title": title, "body": body, "url": url}, token=registration_token,
         )
