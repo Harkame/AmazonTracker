@@ -2,7 +2,7 @@
 
 AmazonTracker is a script that track amazon product and notify you if the price is below an specified price, if the product is available or discounting
 
-You can be notified by eMail or with firebase push notification
+You can be notified by Email :email: or with firebase push notification :iphone:
 
 ## README AND SCRIPT IN PROGRESS
 
@@ -182,7 +182,7 @@ products:
 
 There is 2 type of alert
 
-#### EMail
+#### Email
 
 To enable e-mail notification you need to run amazontracker with parameter email and password
 
@@ -192,7 +192,7 @@ python amazontracker/main.py -e myemailaddress@gmail.com -p mypassword
 
 ```
 
-You must specify an gmail account, with unsecure apps enabled ([Documentation](https://support.google.com/a/answer/6260879))
+You must specify an gmail account, with less secure apps enabled ([Documentation](https://support.google.com/a/answer/6260879))
 
 ``` yaml
 
@@ -259,7 +259,7 @@ title and body
 The title and the body of the notifications.
 These are customisable
 
-For eMail subject and body, and notification title and body, this program recognised keyword and replace it
+For Email subject and body, and notification title and body, this program recognised keyword and replace it
 
 -   $price : Product price
 -   $title : Product title
