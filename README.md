@@ -169,6 +169,7 @@ count represent the element to select, in this case 1 = Blu-ray and 2 = DVD
 #### Tracking by discount
 
 ``` yaml
+
 products:
   - code: #check if discounted
       B07T4Q53ZL
@@ -193,7 +194,6 @@ python amazontracker/main.py -e myemailaddress@gmail.com -p mypassword
 
 You must specify an gmail account, with unsecure apps enabled ([Documentation](https://support.google.com/a/answer/6260879))
 
-
 ``` yaml
 
 email:
@@ -211,8 +211,6 @@ email:
     </html>"
 
 ```
-
-
 
 #### Push notification
 
@@ -242,7 +240,7 @@ notification:
 
 To enable firebase push notification you need to run amazontracker with notification, this is your SDK Admin private key [Documentation](https://firebase.google.com/docs/admin/setup)
 
-```
+``` bash
 
 python amazontracker/main.py -n credential.json
 

@@ -11,26 +11,26 @@ class Product:
         self.reduction = False
 
     def __str__(self):
-        str = ""
+        to_string = ""
 
-        str += "Code :"
-        str += self.code
-        str += os.linesep
-        str += os.linesep
+        to_string += "Code :"
+        to_string += self.code
+        to_string += os.linesep
+        to_string += os.linesep
 
-        str += "Title : "
-        str += self.title
-        str += os.linesep
-        str += os.linesep
+        to_string += "Title : "
+        to_string += self.title
+        to_string += os.linesep
+        to_string += os.linesep
 
-        str += "Price : "
-        str += self.price
-        str += os.linesep
-        str += os.linesep
+        to_string += "Price : "
+        to_string += self.price
+        to_string += os.linesep
+        to_string += os.linesep
 
-        str += "Url : "
-        str += self.url
-        str += os.linesep
-        str += os.linesep
+        to_string += "Url : "
+        to_string += self.url
+        to_string += os.linesep
+        to_string += os.linesep
 
-        return str
+        return to_string
