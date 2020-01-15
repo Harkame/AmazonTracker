@@ -1,6 +1,6 @@
 # AmazonTracker
 
-AmazonTracker is a script that track amazon product and notify you if the price is below an specified price, if the product is avaiable or discounting
+AmazonTracker is a script that track amazon product and notify you if the price is below an specified price, if the product is available or discounting
 
 You can be notified by eMail or with firebase push notification
 
@@ -263,11 +263,11 @@ These are customisable
 
 For eMail subject and body, and notification title and body, this program recognised keyword and replace it
 
-+   $price : Product price
-+   $title : Product title
-+   $url   : Product url
+-   $price : Product price
+-   $title : Product title
+-   $url   : Product url
 
 ## TODO
 
-+   Unit tests
-+   Travis
+-   Unit tests
+-   Travis
