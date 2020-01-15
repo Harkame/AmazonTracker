@@ -186,7 +186,7 @@ There is 2 type of alert
 
 To enable e-mail notification you need to run amazontracker with parameter email and password
 
-```
+``` bash
 
 python amazontracker/main.py -e myemailaddress@gmail.com -p mypassword
 
