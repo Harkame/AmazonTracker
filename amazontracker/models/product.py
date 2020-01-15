@@ -11,9 +11,6 @@ class Product:
         self.reduction = False
 
     def __str__(self):
-        pass
-
-    def __str__(self):
         str = ""
 
         str += "Code :"

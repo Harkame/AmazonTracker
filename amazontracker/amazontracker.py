@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import logging
 import os
-import unicodedata
 from firebase_admin import messaging
 import firebase_admin
 from firebase_admin import credentials
