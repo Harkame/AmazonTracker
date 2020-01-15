@@ -1,3 +1,6 @@
+import unicodedata
+
+
 def format_string(base_string="", title="", price="", url=""):
     return (
         base_string.replace("$title", title)
