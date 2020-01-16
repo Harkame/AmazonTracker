@@ -41,6 +41,44 @@ python amazontracker/main.py
 
 ```
 
+### Options
+
+``` bash
+
+usage: main.py [-h] [-c CONFIG_FILE] [-e EMAIL] [-p PASSWORD] [-n NOTIFICATION] [-s SLEEP] [-i ITERATIONSLEEP] [-v]
+
+Script to track product on Amazon
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG_FILE, --config_file CONFIG_FILE
+                        Set config file
+                        Example : python japscandownloader/main.py -c /home/myconfigfile.yml
+  -e EMAIL, --email EMAIL
+                        Gmail address
+                        Required with password option to send email
+                        Example : python amazontracker/main.py -l mymailadress@gmail.com
+  -p PASSWORD, --password PASSWORD
+                        Gmail password
+                        Required with email option to send email
+                        Example : python amazontracker/main.py -p mypassword
+  -n NOTIFICATION, --notification NOTIFICATION
+                        SDK Admin Firebase private key
+                        Example : python amazontracker/main.py -n /path/to/myprivatekey.json
+  -s SLEEP, --sleep SLEEP
+                        Sleeping time between requests in second
+                        DEFAULT : 3600
+                        Example : python amazontracker/main.py -s 3500
+  -i ITERATIONSLEEP, --iterationsleep ITERATIONSLEEP
+                        Sleeping time between each product request in second
+                        More time you specify, less change to be blocked by amazon spam security, but if you are tracking many products, it will slow your program significantly
+                        DEFAULT : 10
+                        Example : python amazontracker/main.py -i 20
+  -v, --verbose         Active verbose mode, support different level
+                        Example : python japscandownloader/main.py -v
+
+```
+
 ### How it works
 
 This program use an config file (default : ./config.yml)
@@ -203,6 +241,8 @@ python amazontracker/main.py -e myemailaddress@gmail.com -p mypassword
 
 You must specify an gmail account, with less secure apps enabled ([Documentation](https://support.google.com/a/answer/6260879))
 
+##### Email config
+
 ``` yaml
 
 email:
@@ -220,6 +260,10 @@ email:
     </html>"
 
 ```
+
+destinations : List to Email address to send email
+subject : Email subject
+body : Email bodt
 
 #### Push notification :iphone:
 
@@ -268,7 +312,7 @@ title and body
 The title and the body of the notifications.
 These are customisable
 
-For Email subject and body, and notification title and body, this program recognised keyword and replace it
+For Email (subject, body) and notification (title, body), this program recognised keyword and replace it
 
 -   $price : Product price
 -   $title : Product title
