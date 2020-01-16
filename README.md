@@ -112,7 +112,9 @@ Add an entry in products
 
 You can find the code in product page url
 
-https://www.amazon.fr/Red-Dead-Redemption-2-PC/dp/B07ZWB2Q24/ref=sr_1_1?__mk_fr_FR=ÅMÅŽÕÑ&keywords=red+dead+redemption&qid=1577105770&sr=8-1,  here the product code is « B07ZWB2Q24 »
+<https://www.amazon.fr/Red-Dead-Redemption-2-PC/dp/B07ZWB2Q24/ref=sr_1_1?__mk_fr_FR=ÅMÅŽÕÑ&keywords=red+dead+redemption&qid=1577105770&sr=8-1>
+
+Here the product code is « B07ZWB2Q24 »
 
 #### Tracking by price
 
