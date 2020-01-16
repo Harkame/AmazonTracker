@@ -37,7 +37,7 @@ pip install -r requirements.txt
 
 ``` python
 
-python amazontracker/main.py -e mymailaddress@gmail.com -p mypassword
+python amazontracker/main.py
 
 ```
 
@@ -77,7 +77,8 @@ products:
 
 email:
   destinations:
-    - louisr.daviaud@gmail.com
+    - myemailaddress@gmail.com
+    - myanotheremailaddress@hotmail.com
 
   subject:
     "AmazonTracker : $title"
@@ -144,6 +145,17 @@ Alert if the product « B07T3NQBXV » is available
 
 #### Tracking by price with custom selector
 
+Some product like movie have multiple price for Blu-ray or DVD for example
+
+![Screenshot](https://github.com/Harkame/AmazonTracker/blob/master/amazon_selector.JPG "Amazon multiple product")
+
+In this case, you can specify attribut « selector »
+
+Value « .swatchElement span span span span span » select price from Blu-ray and DVD
+
+Count represent the element to select, in this case 1 = Blu-ray and 2 = DVD
+
+
 ``` yaml
 
 products:
@@ -159,14 +171,7 @@ products:
 
 ```
 
-Alert if the product « B07T3NQBXV » price is below 140
-
-![Screenshot](https://github.com/Harkame/AmazonTracker/blob/master/amazon_selector.JPG "Amazon multiple product")
-
-selector :
-
-In this case « .swatchElement span span span span span » select price from Blu-ray and DVD
-count represent the element to select, in this case 1 = Blu-ray and 2 = DVD
+Alert if the product « B07T3NQBXV » Blu-ray price is below 140
 
 #### Tracking by discount
 
@@ -180,11 +185,13 @@ products:
 
 ```
 
+Alert if the product « B07T4Q53ZL » is discounted
+
 ### Alert
 
 There is 2 type of alert
 
-#### Email
+#### Email :email:
 
 To enable e-mail notification you need to run amazontracker with parameter email and password
 
@@ -214,7 +221,7 @@ email:
 
 ```
 
-#### Push notification
+#### Push notification :iphone:
 
 You must create an application linked with your own firebase account
 
