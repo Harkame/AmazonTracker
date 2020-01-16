@@ -39,7 +39,7 @@ DEFAULT_PORT = 587
 DEFAULT_SMTP_SERVER = "smtp.gmail.com"
 
 DEFAULT_SLEEP = 3600
-DEFAULT_PRODUCTS_SLEEP = 20
+DEFAULT_ITERATION_SLEEP = 10
 
 DEFAULT_CREDENTIAL = "credential.json"
 
@@ -52,6 +52,7 @@ class AmazonTracker:
         self.config_file = DEFAULT_CONFIG_FILE
         self.checked_products = []
         self.sleep = DEFAULT_SLEEP
+        self.iteration_sleep = DEFAULT_ITERATION_SLEEP
         self.email_address = ""
         self.password = ""
         self.enable_notification = False
@@ -64,6 +65,7 @@ class AmazonTracker:
 
         logger.debug("config_file : %s", self.config_file)
         logger.debug("sleep : %f", self.sleep)
+        logger.debug("iteration_sleep : %f", self.iteration_sleep)
         logger.debug("email : %s", self.email_address)
         logger.debug("password : %s", self.password)
         logger.debug("enable_notification : %s", self.enable_notification)
@@ -138,7 +140,7 @@ class AmazonTracker:
                 print(f" - {product['code']}")
                 self.check_price(product)
 
-            time.sleep(DEFAULT_PRODUCTS_SLEEP)
+            time.sleep(self.iteration_sleep)
 
     def check_price(self, product):
         logger.debug("product['code'] : %s", product["code"])
