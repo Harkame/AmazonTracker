@@ -239,8 +239,6 @@ class AmazonTracker:
                 self.checked_products.append(product["code"])
 
     def send_email(self, subject, body):
-        smtp_server = "smtp.gmail.com"
-
         logger.debug("subject : %s", subject)
         logger.debug("body : %s", body)
 
