@@ -4,6 +4,17 @@ products:
     price:
       55
 
+  - code: #check price
+      B07XJZS6L2
+    price:
+      55
+
+  - code: #check price
+      B07XJZS6L2
+    price:
+      55
+
+
   - code: #check available
       B07T3NQBXV
 
@@ -35,4 +46,7 @@ notification:
     "$price"
 
 sleep:
+  3600
+
+iteration_sleep:
   10

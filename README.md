@@ -45,7 +45,7 @@ python amazontracker/main.py
 
 ``` bash
 
-usage: main.py [-h] [-c CONFIG_FILE] [-e EMAIL] [-p PASSWORD] [-n NOTIFICATION] [-s SLEEP] [-i ITERATIONSLEEP] [-v]
+usage: main.py [-h] [-c CONFIG_FILE] [-e EMAIL] [-p PASSWORD] [-n NOTIFICATION] [-v]
 
 Script to track product on Amazon
 
@@ -65,18 +65,8 @@ optional arguments:
   -n NOTIFICATION, --notification NOTIFICATION
                         SDK Admin Firebase private key
                         Example : python amazontracker/main.py -n /path/to/myprivatekey.json
-  -s SLEEP, --sleep SLEEP
-                        Sleeping time between requests in second
-                        DEFAULT : 3600
-                        Example : python amazontracker/main.py -s 3500
-  -i ITERATIONSLEEP, --iterationsleep ITERATIONSLEEP
-                        Sleeping time between each product request in second
-                        More time you specify, less change to be blocked by amazon spam security, but if you are tracking many products, it will slow your program significantly
-                        DEFAULT : 10
-                        Example : python amazontracker/main.py -i 20
   -v, --verbose         Active verbose mode, support different level
                         Example : python japscandownloader/main.py -v
-
 ```
 
 ### How it works
@@ -305,7 +295,7 @@ Notify all devices that subscribes this topic
 
 registration_token :
 
-Notify all devices represented by this token
+Notify all devices represented by those tokens
 
 title and body
 

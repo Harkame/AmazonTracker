@@ -59,18 +59,6 @@ class AmazonTracker:
         self.enable_email = False
         self.credential = DEFAULT_CREDENTIAL
 
-    def init(self):
-        self.init_arguments()
-        self.init_config()
-
-        logger.debug("config_file : %s", self.config_file)
-        logger.debug("sleep : %f", self.sleep)
-        logger.debug("iteration_sleep : %f", self.iteration_sleep)
-        logger.debug("email : %s", self.email_address)
-        logger.debug("password : %s", self.password)
-        logger.debug("enable_notification : %s", self.enable_notification)
-        logger.debug("credential : %s", self.credential)
-
     def init_arguments(self):
         arguments = get_arguments(None)
 
@@ -102,14 +90,17 @@ class AmazonTracker:
             self.password = arguments.password
             self.enable_email = True
 
-        if arguments.sleep is not None:
-            self.sleep = arguments.sleep
-
         if arguments.notification is not None:
             self.enable_notification = True
             self.credential = arguments.notification
             cred = credentials.Certificate(self.credential)
             firebase_admin.initialize_app(cred)
+
+        logger.debug("config_file : %s", self.config_file)
+        logger.debug("email : %s", self.email_address)
+        logger.debug("password : %s", self.password)
+        logger.debug("enable_notification : %s", self.enable_notification)
+        logger.debug("credential : %s", self.credential)
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -125,24 +116,29 @@ class AmazonTracker:
             self.email = {}
 
         if "sleep" in config and config["sleep"] is not None:
-            sleep = float(config["sleep"])
+            self.sleep = float(config["sleep"])
 
-            if sleep != DEFAULT_SLEEP:
-                self.sleep = sleep
+        if "iteration_sleep" in config and config["iteration_sleep"] is not None:
+            self.iteration_sleep = float(config["iteration_sleep"])
 
-    def check_prices(self):
+        logger.debug("products : %s", self.products)
+        logger.debug("email : %s", self.email)
+        logger.debug("sleep : %s", self.sleep)
+        logger.debug("iteration_sleep : %s", self.iteration_sleep)
+
+    def check_products(self):
         self.init_config()
 
-        print("Check prices...")
+        print("Check products...")
 
         for product in self.products:
             if product["code"] not in self.checked_products:
                 print(f" - {product['code']}")
-                self.check_price(product)
+                self.check_product(product)
 
             time.sleep(self.iteration_sleep)
 
-    def check_price(self, product):
+    def check_product(self, product):
         logger.debug("product['code'] : %s", product["code"])
 
         url = f"{AMAZON_BASE_PRODUCT_URL}{product['code']}"
@@ -155,7 +151,14 @@ class AmazonTracker:
         tracked_product.code = product["code"]
         tracked_product.url = url
 
-        tracked_product.title = page.find(id="productTitle").text.strip()
+        product_title_tag = page.find(id="productTitle")
+
+        if product_title_tag is None:
+            logger.debug("spam detected")
+            time.sleep(15)  # spam detected
+            return
+
+        tracked_product.title = product_title_tag.text.strip()
 
         if "selector" in product:
             count = (
@@ -218,7 +221,7 @@ class AmazonTracker:
                                     url,
                                 )
 
-                    self.checked_products.append(product["code"])
+                    # self.checked_products.append(product["code"])
             elif "reduction" in product:
                 if (
                     page.find("span", {"class": "priceBlockStrikePriceString"})
@@ -238,7 +241,7 @@ class AmazonTracker:
                         "amazon_tracker", tracked_product.title, "Is available", url
                     )
 
-                self.checked_products.append(product["code"])
+                # self.checked_products.append(product["code"])
 
     def send_email(self, subject, body):
         logger.debug("subject : %s", subject)
@@ -281,4 +284,4 @@ class AmazonTracker:
         response = messaging.send(message)
 
     def run(self):
-        set_interval(self.check_prices, self.sleep, True)
+        set_interval(self.check_products, self.sleep, True)

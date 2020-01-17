@@ -46,25 +46,6 @@ Example : python amazontracker/main.py -n /path/to/myprivatekey.json""",
     )
 
     argument_parser.add_argument(
-        "-s",
-        "--sleep",
-        help="""Sleeping time between requests in second
-DEFAULT : 3600
-Example : python amazontracker/main.py -s 3500""",
-        type=float,
-    )
-
-    argument_parser.add_argument(
-        "-i",
-        "--iterationsleep",
-        help="""Sleeping time between each product request in second
-More time you specify, less change to be blocked by amazon spam security, but if you are tracking many products, it will slow your program significantly
-DEFAULT : 10
-Example : python amazontracker/main.py -i 20""",
-        type=float,
-    )
-
-    argument_parser.add_argument(
         "-v",
         "--verbose",
         help="""Active verbose mode, support different level
