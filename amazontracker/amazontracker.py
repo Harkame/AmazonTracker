@@ -168,6 +168,9 @@ class AmazonTracker:
         else:
             price_tag = page.find(id="priceblock_ourprice")
 
+        if price_tag is None:
+            price_tag = page.find(id="priceblock_dealprice")
+
         if price_tag is not None:
             price = price_tag.text.strip()
 
@@ -220,16 +223,28 @@ class AmazonTracker:
                                     str(tracked_product.price),
                                     url,
                                 )
-
-                    # self.checked_products.append(product["code"])
-            elif "reduction" in product:
+                    self.checked_products.append(product["code"])
+            elif "discounted" in product:
+                print("check discounted")
                 if (
                     page.find("span", {"class": "priceBlockStrikePriceString"})
                     is not None
                 ):
-                    print("price reductionin page")
-            else:
-                logger.debug("produce %s available", product["co"])
+                    print("alert deal")
+                    if self.enable_email:
+                        self.send_email(
+                            product["code"], title=tracked_product.title, url=url
+                        )
+
+                    if self.enable_notification:
+                        self.send_notification_topic(
+                            "amazon_tracker",
+                            tracked_product.title,
+                            "Is discounted",
+                            url,
+                        )
+            else:  # availability
+                logger.debug("product %s available", product["co"])
 
                 if self.enable_email:
                     self.send_email(
@@ -241,7 +256,7 @@ class AmazonTracker:
                         "amazon_tracker", tracked_product.title, "Is available", url
                     )
 
-                # self.checked_products.append(product["code"])
+                self.checked_products.append(product["code"])
 
     def send_email(self, subject, body):
         logger.debug("subject : %s", subject)
