@@ -225,12 +225,10 @@ class AmazonTracker:
                                 )
                     self.checked_products.append(product["code"])
             elif "discounted" in product:
-                print("check discounted")
                 if (
                     page.find("span", {"class": "priceBlockStrikePriceString"})
                     is not None
                 ):
-                    print("alert deal")
                     if self.enable_email:
                         self.send_email(
                             product["code"], title=tracked_product.title, url=url
@@ -243,6 +241,8 @@ class AmazonTracker:
                             "Is discounted",
                             url,
                         )
+
+                    self.checked_products.append(product["code"])
             else:  # availability
                 logger.debug("product %s available", product["co"])
 
