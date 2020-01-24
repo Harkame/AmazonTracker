@@ -171,6 +171,11 @@ class AmazonTracker:
         if price_tag is None:
             price_tag = page.find(id="priceblock_dealprice")
 
+        if price_tag is None:
+            price_tag = page.find(id="unqualifiedBuyBox").find(
+                "span", {"class": "a-color-price"}
+            )
+
         if price_tag is not None:
             price = price_tag.text.strip()
 
@@ -288,6 +293,9 @@ class AmazonTracker:
         )
 
         response = messaging.send(message)
+
+    def create_merged_mail(self, products):
+        pass
 
     def send_notification_device(
         self, registration_token="", title="", body="", url=""
