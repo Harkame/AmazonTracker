@@ -4,19 +4,10 @@ products:
     price:
       59
 
-  - code: #check price
-      B07XJZS6L2
-    price:
-      55
-
-  - code: #check price
-      B07XJZS6L2
-    price:
-      55
-
-
   - code: #check available
       B07T3NQBXV
+    price:
+      130
 
 email:
   destinations:
