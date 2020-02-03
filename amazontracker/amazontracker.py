@@ -172,9 +172,15 @@ class AmazonTracker:
             price_tag = page.find(id="priceblock_dealprice")
 
         if price_tag is None:
-            price_tag = page.find(id="unqualifiedBuyBox").find(
-                "span", {"class": "a-color-price"}
-            )
+            unqualified_buy_box_tag = page.find(id="unqualifiedBuyBox")
+
+            if unqualified_buy_box_tag is not None:
+                price_tag = unqualified_buy_box_tag.find(
+                    "span", {"class": "a-color-price"}
+                )
+
+        if price_tag is None:
+            price_tag = page.select(".swatchElement span span span span span")[0]
 
         if price_tag is not None:
             price = price_tag.text.strip()
