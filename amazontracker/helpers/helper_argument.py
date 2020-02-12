@@ -13,9 +13,9 @@ def get_arguments(arguments):
 
     argument_parser.add_argument(
         "-c",
-        "--config_file",
+        "--config",
         help="""Set config file
-Example : python japscandownloader/main.py -c /home/myconfigfile.yml""",
+Example : python amazontracker/main.py -c /home/myconfigfile.yml""",
         type=str,
     )
 
@@ -46,10 +46,18 @@ Example : python amazontracker/main.py -n /path/to/myprivatekey.json""",
     )
 
     argument_parser.add_argument(
+        "-w",
+        "--windows",
+        help="""Enable windows notification
+Example : python amazontracker/main.py -w """,
+        action="store_true",
+    )
+
+    argument_parser.add_argument(
         "-v",
         "--verbose",
         help="""Active verbose mode, support different level
-Example : python japscandownloader/main.py -v""",
+Example : python amazontracker/main.py -v""",
         action="count",
     )
 

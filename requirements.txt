@@ -3,3 +3,4 @@ lxml
 requests
 requests_toolbelt
 firebase-admin
+git+https://github.com/Charnelx/Windows-10-Toast-Notifications.git

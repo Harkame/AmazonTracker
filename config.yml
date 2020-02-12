@@ -1,13 +1,15 @@
 products:
+  - code: #check available
+      B07T3NQBXV
+    price:
+      130
+
   - code: #check price
       B01MA5AVXM
     price:
       59
 
-  - code: #check available
-      B07T3NQBXV
-    price:
-      130
+
 
 email:
   destinations:

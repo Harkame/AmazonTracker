@@ -9,6 +9,8 @@ import smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import time
+from win10toast import ToastNotifier
+import webbrowser
 
 if __package__ is None or __package__ == "":
     from helpers import (
@@ -43,7 +45,10 @@ DEFAULT_ITERATION_SLEEP = 10
 
 DEFAULT_CREDENTIAL = "credential.json"
 
-headers = {"User-Agent": "Mozilla/5.0"}
+headers = {
+    "User-Agent": "My User Agent 1.0",
+    "From": "youremail@domain.com",  # This is another valid field
+}
 
 
 class AmazonTracker:
@@ -58,6 +63,8 @@ class AmazonTracker:
         self.enable_notification = False
         self.enable_email = False
         self.credential = DEFAULT_CREDENTIAL
+        self.enable_windows_notification = False
+        self.windows_toast = {}
 
     def init_arguments(self):
         arguments = get_arguments(None)
@@ -96,11 +103,17 @@ class AmazonTracker:
             cred = credentials.Certificate(self.credential)
             firebase_admin.initialize_app(cred)
 
+        if arguments.windows is not None:
+            self.enable_windows_notification = True
+
         logger.debug("config_file : %s", self.config_file)
         logger.debug("email : %s", self.email_address)
         logger.debug("password : %s", self.password)
         logger.debug("enable_notification : %s", self.enable_notification)
         logger.debug("credential : %s", self.credential)
+        logger.debug(
+            "enable_windows_notification : %s", self.enable_windows_notification
+        )
 
     def init_config(self):
         config = get_config(self.config_file)
@@ -114,6 +127,11 @@ class AmazonTracker:
             self.email = config["email"]
         else:
             self.email = {}
+
+        if "windows_toast" in config and config["windows_toast"] is not None:
+            self.windows_toast = config["windows_toast"]
+        else:
+            self.windows_toast = {}
 
         if "sleep" in config and config["sleep"] is not None:
             self.sleep = float(config["sleep"])
@@ -157,6 +175,8 @@ class AmazonTracker:
             logger.debug("spam detected")
             time.sleep(15)  # spam detected
             return
+
+        image = page.find("img", {"id": "landingImage"})["src"]
 
         tracked_product.title = product_title_tag.text.strip()
 
@@ -234,6 +254,12 @@ class AmazonTracker:
                                     str(tracked_product.price),
                                     url,
                                 )
+
+                    if self.enable_windows_notification:
+                        self.send_windows_notification(
+                            tracked_product.title, "Is available", url, "amazon.ico"
+                        )
+
                     self.checked_products.append(product["code"])
             elif "discounted" in product:
                 if (
@@ -253,6 +279,11 @@ class AmazonTracker:
                             url,
                         )
 
+                    if self.enable_windows_notification:
+                        self.send_windows_notification(
+                            tracked_product.title, "Is available", url, "amazon.ico"
+                        )
+
                     self.checked_products.append(product["code"])
             else:  # availability
                 logger.debug("product %s available", product["co"])
@@ -265,6 +296,11 @@ class AmazonTracker:
                 if self.enable_notification:
                     self.send_notification_topic(
                         "amazon_tracker", tracked_product.title, "Is available", url
+                    )
+
+                if self.enable_windows_notification:
+                    self.send_windows_notification(
+                        tracked_product.title, "Is available", url, "amazon.ico"
                     )
 
                 self.checked_products.append(product["code"])
@@ -300,6 +336,17 @@ class AmazonTracker:
 
         response = messaging.send(message)
 
+    def send_windows_notification(self, title="", body="", url="", image=None):
+        toaster = ToastNotifier()
+        toaster.show_toast(
+            title,
+            body,
+            icon_path=image,
+            duration=3,
+            threaded=True,
+            callback_on_click=WindowsNotification(url),
+        )
+
     def create_merged_mail(self, products):
         pass
 
@@ -314,3 +361,11 @@ class AmazonTracker:
 
     def run(self):
         set_interval(self.check_products, self.sleep, True)
+
+
+class WindowsNotification:
+    def __init__(self, url):
+        self.url = url
+
+    def __call__(self):
+        webbrowser.open(self.url, new=0)

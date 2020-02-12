@@ -1,8 +1,8 @@
 # AmazonTracker
 
-AmazonTracker is a script that track amazon product and notify you if the price is below an specified price, if the product is available or discounting
+AmazonTracker is a script that track amazon product and notify you if the price is below an specified price, if the product is discounting or simply available
 
-You can be notified by Email :email: or with firebase push notification :iphone:
+You can be notified by Email :email:, firebase push notification :iphone: or with Windows Toast :speech_balloon:
 
 ## README AND SCRIPT IN PROGRESS
 
@@ -30,6 +30,7 @@ pip install -r requirements.txt
 -   [lxml](https://github.com/lxml/lxml.git)
 -   [requests](https://github.com/psf/requests.git)
 -   [firebase-admin-python](https://github.com/firebase/firebase-admin-python)
+-   [Windows-10-Toast-Notifications (Charnelx fork)](https://github.com/Charnelx/Windows-10-Toast-Notifications.git)
 
 ## Usage
 
@@ -44,16 +45,15 @@ python amazontracker/main.py
 ### Options
 
 ``` bash
-
-usage: main.py [-h] [-c CONFIG_FILE] [-e EMAIL] [-p PASSWORD] [-n NOTIFICATION] [-v]
+usage: main.py [-h] [-c CONFIG] [-e EMAIL] [-p PASSWORD] [-n NOTIFICATION] [-w] [-v]
 
 Script to track product on Amazon
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c CONFIG_FILE, --config_file CONFIG_FILE
+  -c CONFIG, --config CONFIG
                         Set config file
-                        Example : python japscandownloader/main.py -c /home/myconfigfile.yml
+                        Example : python amazontracker/main.py -c /home/myconfigfile.yml
   -e EMAIL, --email EMAIL
                         Gmail address
                         Required with password option to send email
@@ -65,8 +65,10 @@ optional arguments:
   -n NOTIFICATION, --notification NOTIFICATION
                         SDK Admin Firebase private key
                         Example : python amazontracker/main.py -n /path/to/myprivatekey.json
+  -w, --windows         Enable windows notification
+                        Example : python amazontracker/main.py -w
   -v, --verbose         Active verbose mode, support different level
-                        Example : python japscandownloader/main.py -v
+                        Example : python amazontracker/main.py -
 ```
 
 ### How it works
@@ -263,6 +265,8 @@ You must create an application linked with your own firebase account
 
 [FCM Tuto](https://www.youtube.com/watch?v=QXPgMUSfYFI)
 
+##### Push notification config
+
 ``` yaml
 
 notification:
@@ -279,6 +283,20 @@ notification:
   body:
     "$price"
 
+```
+
+#### Windows Toast :speech_balloon:
+
+##### Windows Toast config
+
+``` yaml
+
+windows_toast:
+  title:
+    "AmazonTracker : $title"
+
+  body:
+    "$price"
 ```
 
 To enable firebase push notification you need to run amazontracker with notification, this is your SDK Admin private key [Documentation](https://firebase.google.com/docs/admin/setup)
