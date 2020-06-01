@@ -2,12 +2,12 @@ products:
   - code: #check available
       B07T3NQBXV
     price:
-      130
+      170
 
   - code: #check price
       B01MA5AVXM
     price:
-      59
+      100
 
 
 
@@ -29,8 +29,7 @@ notification:
     amazon_tracker
 
   registration_token:
-    - device1
-    - device2
+    - fkurg5ZFxGefrqSxT1CxXL:APA91bFSYbHmjOWKeBjLeYKe8mNnvzJNn6vLLKtuvvI5Kvrr58-nOrQCcUH6TkWDQj7CNcNeHBZPsLwCz1cPZ58TO-ypXBEioz0ydbSGPH0ZSSUdiar3KXhbt5povkyhVPilrLV6XU6H
 
   title:
     "AmazonTracker"

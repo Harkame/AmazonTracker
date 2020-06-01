@@ -65,6 +65,7 @@ class AmazonTracker:
         self.credential = DEFAULT_CREDENTIAL
         self.enable_windows_notification = False
         self.windows_toast = {}
+        self.notification = {}
 
     def init_arguments(self):
         arguments = get_arguments(None)
@@ -138,6 +139,9 @@ class AmazonTracker:
 
         if "iteration_sleep" in config and config["iteration_sleep"] is not None:
             self.iteration_sleep = float(config["iteration_sleep"])
+
+        if "notification" in config and config["notification"] is not None:
+            self.notification = config["notification"]
 
         logger.debug("products : %s", self.products)
         logger.debug("email : %s", self.email)
@@ -246,8 +250,8 @@ class AmazonTracker:
                             url,
                         )
 
-                        if "registration_token" in self.email:
-                            for token in email["registration_token"]:
+                        if "registration_token" in self.notification:
+                            for token in self.notification["registration_token"]:
                                 self.send_notification_device(
                                     token,
                                     tracked_product.title,
