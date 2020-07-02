@@ -45,9 +45,20 @@ DEFAULT_ITERATION_SLEEP = 10
 
 DEFAULT_CREDENTIAL = "credential.json"
 
+"""
 headers = {
-    "User-Agent": "My User Agent 1.0",
-    "From": "youremail@domain.com",  # This is another valid field
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Server": "Server",
+    "Date": "Tue, 23 Jun 2020 11:55:44 GMT",
+    "Accept-CH": "ect,rtt,downlink",
+    "Accept-CH-Lifetime": "86400",
+    "Cache-Control": "no-cache, no-transform",
+}
+"""
+headers = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
 }
 
 
@@ -65,6 +76,7 @@ class AmazonTracker:
         self.credential = DEFAULT_CREDENTIAL
         self.enable_windows_notification = False
         self.windows_toast = {}
+        self.session = requests.session()
 
     def init_arguments(self):
         arguments = get_arguments(None)
@@ -163,13 +175,16 @@ class AmazonTracker:
 
         logger.debug("url : %s", url)
 
-        page = BeautifulSoup(requests.get(url, headers=headers).content, "html.parser")
+        page = BeautifulSoup(self.session.get(url, headers=headers).content, "lxml")
 
         tracked_product = Product()
         tracked_product.code = product["code"]
         tracked_product.url = url
 
-        product_title_tag = page.find(id="productTitle")
+        product_title_tag = page.find(id="titleSection")
+
+        print(page)
+        print(product_title_tag)
 
         if product_title_tag is None:
             logger.debug("spam detected")
